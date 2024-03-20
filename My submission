@@ -1,0 +1,181 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Structure définissant un wagon
+typedef struct Wagon {
+    int code;
+    int capacite;
+    int classe; // 1 pour 1ère classe, 2 pour 2ème classe
+    int jour;
+    int mois;
+    int annee;
+    struct Wagon *suivant;
+} Wagon;
+
+// Fonction pour créer un nouveau wagon
+Wagon* creerWagon(int code, int capacite, int classe, int jour, int mois, int annee) {
+    Wagon *nouveauWagon = (Wagon*)malloc(sizeof(Wagon));
+    if (nouveauWagon == NULL) {
+        printf("Erreur: Échec de l'allocation de mémoire.\n");
+        exit(EXIT_FAILURE);
+    }
+    nouveauWagon->code = code;
+    nouveauWagon->capacite = capacite;
+    nouveauWagon->classe = classe;
+    nouveauWagon->jour = jour;
+    nouveauWagon->mois = mois;
+    nouveauWagon->annee = annee;
+    nouveauWagon->suivant = NULL;
+    return nouveauWagon;
+}
+
+// Fonction pour ajouter un wagon au début d'un train
+void ajouterDebutTrain(Wagon **train, Wagon *nouveauWagon) {
+    nouveauWagon->suivant = *train;
+    *train = nouveauWagon;
+}
+
+// Fonction pour ajouter un wagon à la fin d'un train
+void ajouterFinTrain(Wagon **train, Wagon *nouveauWagon) {
+    if (*train == NULL) {
+        *train = nouveauWagon;
+    } else {
+        Wagon *temp = *train;
+        while (temp->suivant != NULL) {
+            temp = temp->suivant;
+        }
+        temp->suivant = nouveauWagon;
+    }
+}
+
+// Fonction pour ajouter un wagon à une position donnée d'un train
+void ajouterPositionTrain(Wagon **train, Wagon *nouveauWagon, int position) {
+    if (position == 0) {
+        ajouterDebutTrain(train, nouveauWagon);
+    } else {
+        Wagon *temp = *train;
+        for (int i = 0; i < position - 1 && temp != NULL; i++) {
+            temp = temp->suivant;
+        }
+        if (temp == NULL) {
+            printf("Erreur: La position donnée dépasse la taille du train.\n");
+            return;
+        }
+        nouveauWagon->suivant = temp->suivant;
+        temp->suivant = nouveauWagon;
+    }
+}
+
+// Fonction pour ajouter un wagon après un wagon identifié par son code
+void ajouterApresWagon(Wagon **train, Wagon *nouveauWagon, int code) {
+    Wagon *temp = *train;
+    while (temp != NULL && temp->code != code) {
+        temp = temp->suivant;
+    }
+    if (temp == NULL) {
+        printf("Erreur: Le wagon avec le code donné n'a pas été trouvé.\n");
+        return;
+    }
+    nouveauWagon->suivant = temp->suivant;
+    temp->suivant = nouveauWagon;
+}
+
+// Fonction pour supprimer un wagon au début d'un train
+void supprimerDebutTrain(Wagon **train) {
+    if (*train == NULL) {
+        printf("Erreur: Le train est vide.\n");
+        return;
+    }
+    Wagon *temp = *train;
+    *train = (*train)->suivant;
+    free(temp);
+}
+
+// Fonction pour supprimer un wagon à la fin d'un train
+void supprimerFinTrain(Wagon **train) {
+    if (*train == NULL) {
+        printf("Erreur: Le train est vide.\n");
+        return;
+    }
+    if ((*train)->suivant == NULL) {
+        free(*train);
+        *train = NULL;
+        return;
+    }
+    Wagon *precedent = NULL;
+    Wagon *courant = *train;
+    while (courant->suivant != NULL) {
+        precedent = courant;
+        courant = courant->suivant;
+    }
+    precedent->suivant = NULL;
+    free(courant);
+}
+
+// Fonction pour supprimer un wagon à une position donnée d'un train
+void supprimerPositionTrain(Wagon **train, int position) {
+    if (*train == NULL) {
+        printf("Erreur: Le train est vide.\n");
+        return;
+    }
+    if (position == 0) {
+        supprimerDebutTrain(train);
+    } else {
+        Wagon *precedent = NULL;
+        Wagon *courant = *train;
+        int i = 0;
+        while (i < position && courant != NULL) {
+            precedent = courant;
+            courant = courant->suivant;
+            i++;
+        }
+        if (courant == NULL) {
+            printf("Erreur: La position donnée dépasse la taille du train.\n");
+            return;
+        }
+        precedent->suivant = courant->suivant;
+        free(courant);
+    }
+}
+
+// Fonction pour supprimer le 2ème wagon de 2ème classe d'un train
+void supprimerDeuxiemeWagonDeuxiemeClasse(Wagon **train) {
+    Wagon *precedent = NULL;
+    Wagon *courant = *train;
+    int countDeuxiemeClasse = 0;
+    while (courant != NULL) {
+        if (courant->classe == 2) {
+            countDeuxiemeClasse++;
+            if (countDeuxiemeClasse == 2) {
+                if (precedent == NULL) {
+                    *train = courant->suivant;
+                } else {
+                    precedent->suivant = courant->suivant;
+                }
+                free(courant);
+                return;
+            }
+        }
+        precedent = courant;
+        courant = courant->suivant;
+    }
+    printf("Erreur: Le deuxième wagon de deuxième classe n'a pas été trouvé.\n");
+}
+
+// Fonction pour afficher les informations des wagons d'un train
+void afficherTrain(Wagon *train) {
+    printf("Informations des wagons du train:\n");
+    while (train != NULL) {
+        printf("Code: %d, Capacité: %d, Classe: %d, Date de mise en circulation: %d/%d/%d\n",
+               train->code, train->capacite, train->classe, train->jour, train->mois, train->annee);
+        train = train->suivant;
+    }
+}
+
+// Fonction principale
+int main() {
+    // Exemple d'utilisation
+    Wagon *train = NULL;
+    ajouterFinTrain(&train, creerWagon(1, 50, 1, 1, 1, 2020));
+    ajouterFinTrain(&train, creerWagon(2, 60, 2, 
